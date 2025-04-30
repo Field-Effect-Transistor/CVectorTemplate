@@ -9,25 +9,23 @@
 static const size_t INITIAL_CAPACITY = 2;
 
 struct vector {
-    void* data;
+    void** data;
     size_t size;
     size_t capacity;
 
-    size_t typeSize;
+    size_t typeSize;    //  only for POD types | for non-POD types use sizeof(void*) or 0
 
     //  only for non-POD types
     //  both constructor and destructor should allocate and free memory for structure
     //  if common constructor or destructor doesn't do it, you should write your own
-    void*(*constructor)(void);          //  should allocate memory for structure
-    void (*copy)(void* dst, const void* src); //  should NOT allocate memory for structure
-    void (*destructor)(void*);          //  should free memory allocated for structure, not only data inside
+    void (*copy)(void** dst, const void* src); //  should allocate memory for structure
+    void (*destructor)(void*);          //  should free memory allocated for structure
 };
 
 struct vector* initVector(
-    size_t typeSize,
-    void*(*constructor)(void),
-    void (*copy)(void* dst, const void* src),
-    void (*destructor)(void*)
+    void (*copy)(void** dst, const void* src),
+    void (*destructor)(void*),
+    size_t typeSize
 );
 void freeVector(struct vector* v);
 

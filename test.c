@@ -8,8 +8,9 @@ struct test {
     int b;
 };
 
-void copyTest(void* dst, const void* src) {
-    struct test* dstTest = (struct test*)dst;
+void copyTest(void** dst, const void* src) {
+    *dst = malloc(sizeof(struct test));
+    struct test* dstTest = (struct test*)(*dst);
     struct test* srcTest = (struct test*)src;
     dstTest->a = srcTest->a;
     dstTest->b = srcTest->b;
@@ -20,8 +21,8 @@ void deleteTest(void* test) {
 }
 
 int main(void) {
-    struct vector* v = initVector(sizeof(int), NULL, NULL, NULL);
-    struct vector* v2 = initVector(sizeof(struct test), NULL, copyTest, deleteTest);
+    struct vector* v = initVector(NULL, NULL, sizeof(int));
+    struct vector* v2 = initVector(copyTest, deleteTest, 0);
 
     for (int i = 0; i < 10; ++i) {
         printf("%d\n", pushBack(v, &i));
@@ -37,7 +38,7 @@ int main(void) {
     for (int i = 0; i < 8; ++i) {
         struct test t = {i, i - 1};
         printf("%d\n", pushBack(v2, &t));
-        printf("%d:%d\n", ((struct test*)v2->data)[i].a, ((struct test*)v2->data)[i].b);
+        printf("%d:%d\n", ((struct test*)v2->data[i])->a, ((struct test*)v2->data[i])->b);
         printf("%ld:%ld\n\n", v2->size, v2->capacity);
     }
 

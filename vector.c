@@ -10,19 +10,20 @@
 #endif
 
 struct vector* initVector(
-    size_t typeSize,
-    void*(*constructor)(void),
-    void (*copy)(void* dst, const void* src),
-    void (*destructor)(void*)
+    void (*copy)(void** dst, const void* src),
+    void (*destructor)(void*),
+    size_t typeSize
 ) {
-    if (typeSize > 0) {
+    if (true) {
         struct vector* v = malloc(sizeof(struct vector));
         if (!v) {
         DPRINT("Failed to allocate memory for vector\n");
         return NULL;
         }
 
-        v->data = malloc(INITIAL_CAPACITY * typeSize);
+        v->typeSize = typeSize ? typeSize : sizeof(void*);
+
+        v->data = (void**)malloc(INITIAL_CAPACITY * v->typeSize);
         if (!v->data) {
             DPRINT("Failed to allocate memory for vector data\n");
             free(v);
@@ -31,8 +32,6 @@ struct vector* initVector(
 
         v->size = 0;
         v->capacity = INITIAL_CAPACITY;
-        v->typeSize = typeSize;
-        v->constructor = constructor;
         v->destructor = destructor;
         v->copy = copy;
         return v;
@@ -44,16 +43,15 @@ struct vector* initVector(
 void freeVector(struct vector* v) {
     if (v) {
         if (v->data) {
-            if (v->destructor) {
+            if (v->destructor && v->size > 0) {
                 char* ptr = (char*)v->data;
                 char* end = ((char*)v->data) + v->size * v->typeSize;
                 while (ptr < end) {
-                    v->destructor(ptr);
-                    ptr += v->typeSize;
+                    v->destructor(*(void**)ptr);
+                    ptr += sizeof(void*);
                 }
-            } else {
-                free(v->data);
             }
+            free(v->data);
         }
         free(v);
     }
@@ -69,7 +67,7 @@ bool pushBack(struct vector* v, void* value) {
 
             if (v->size == v->capacity) {
                 DPRINT("Reallocating memory for vector data\n");
-                void* temp = malloc(2 * v->capacity * v->typeSize);
+                void** temp = (void**)malloc(2 * v->capacity * v->typeSize);
                 if (!temp) {
                     DPRINT("Failed to reallocate memory for vector data\n");
                     return false;
@@ -81,7 +79,7 @@ bool pushBack(struct vector* v, void* value) {
             }
 
             if (v->copy) {
-                v->copy((char*)v->data + v->size * v->typeSize, value);
+                v->copy((void**)((char*)v->data + v->size * v->typeSize), value);
             } else {
                 memcpy((char*)v->data + v->size * v->typeSize, value, v->typeSize);
             }
@@ -94,6 +92,7 @@ bool pushBack(struct vector* v, void* value) {
     return false;
 }
 
+/*
 void* at(struct vector* v, size_t index) {
     if (v) {
         if (v->data && index < v->size) {
@@ -104,7 +103,7 @@ void* at(struct vector* v, size_t index) {
     DPRINT("At failed\n");
     return NULL;
 }
-
+/*  
 void* front(struct vector* v) {
     if (v) {
         if (v->data && v->size > 0) {
@@ -176,3 +175,5 @@ bool insert(struct vector* v, size_t index, void* value) {
     DPRINT("Failed to insert\n");
     return false;
 }
+
+//*/
