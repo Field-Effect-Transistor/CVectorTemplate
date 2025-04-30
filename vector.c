@@ -1,4 +1,4 @@
-//  vector.cpp
+//  vector.c
 
 #include "vector.h"
 
