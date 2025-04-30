@@ -46,7 +46,7 @@ void freeVector(struct vector* v) {
         if (v->data) {
             if (v->destructor) {
                 char* ptr = (char*)v->data;
-                char* end = (char*)v->data + v->size * v->typeSize;
+                char* end = ((char*)v->data) + v->size * v->typeSize;
                 while (ptr < end) {
                     v->destructor(ptr);
                     ptr += v->typeSize;
@@ -125,4 +125,54 @@ void* back(struct vector* v) {
 
     DPRINT("Back failed\n");
     return NULL;
+}
+
+bool insert(struct vector* v, size_t index, void* value) {
+    if (v) {
+        if (v->data && v->size < index) {
+            if (!value) {
+                DPRINT("Failed to insert via NULL ptr to value\n");
+                return false;
+            }
+
+            if (v->size == v->capacity) {
+                DPRINT("Realocating memory for vector data\n");
+                void* temp = malloc(2 * v->capacity * v->typeSize);
+                if (!temp) {
+                    DPRINT("Failed to realocate memory for vector data\n");
+                    return false;
+                }
+
+                memcpy(temp, v->data, index * v->typeSize);
+                memcpy(
+                    temp + (index + 2) * v->typeSize,
+                    v->data + (index + 1) * v->typeSize,
+                    v->typeSize * (v->size - index)
+                );
+                if (v->copy) {
+                    v->copy(temp + (index + 1) * v->typeSize, value);
+                } else {
+                    memcpy(temp + (index + 1) * v->typeSize, value, v->typeSize);
+                }
+
+                v->capacity = 2 * v->capacity;
+                free(v->data);
+                v->data = temp;
+            } else {
+                memmove(
+                    v->data + (index + 2) * v->typeSize,
+                    v->data + (index + 1) * v->typeSize,
+                    v->typeSize * (v->size - index)
+                );
+                if (v->copy) {
+                    v->copy(v->data + (index + 1) * v->typeSize, value);
+                } else {
+                    memcpy(v->data + (index + 1) * v->typeSize, value, v->typeSize);
+                }
+            }
+        }
+    }
+
+    DPRINT("Failed to insert\n");
+    return false;
 }
