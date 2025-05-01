@@ -18,8 +18,9 @@ struct vector {
     //  only for non-POD types
     //  both constructor and destructor should allocate and free memory for structure
     //  if common constructor or destructor doesn't do it, you should write your own
-    void (*copy)(void** dst, const void* src); //  should allocate memory for structure
-    void (*destructor)(void*);          //  should free memory allocated for structure
+    //void* (*constructor)(void);                 //  should allocate memory for structure
+    void (*copy)(void** dst, const void* src);  //  should allocate memory for structure
+    void (*destructor)(void*);                  //  should free memory allocated for structure
 };
 
 struct vector* initVector(
@@ -29,8 +30,8 @@ struct vector* initVector(
 );
 void freeVector(struct vector* v);
 
-bool pushBack(struct vector* v, void* value);
-bool insert(struct vector* v, size_t index, void* value);
+bool pushBack(struct vector* v, const void* value);
+bool insert(struct vector* v, size_t index, const void* value);
 
 bool popBack(struct vector* v);
 bool erase(struct vector* v, size_t index);
@@ -42,3 +43,5 @@ void* back(struct vector* v);
 
 bool resize(struct vector* v, size_t nSize);
 bool reserve(struct vector* v, size_t nCapacity);
+
+bool isEmpty(struct vector* v);   
